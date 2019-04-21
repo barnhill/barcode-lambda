@@ -1,4 +1,4 @@
-# barcode-lambda [![Build Status](https://www.travis-ci.org/barnhill/barcodelib.svg?branch=master)](https://www.travis-ci.org/barnhill/barcode-lambda)
+# barcode-lambda [![Build Status](https://www.travis-ci.org/barnhill/barcode-lambda.svg?branch=master)](https://www.travis-ci.org/barnhill/barcode-lambda)
 Barcode function for AWS Lambda
 
 ### Overview ###
