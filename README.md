@@ -5,7 +5,7 @@ Barcode function for AWS Lambda
  
 This lambda function was developer to give an easy to use method for incorporating barcode generation into your AWS Lambda / cloud footprint.
 
-#Symbologies#
+# Symbologies #
 
 |   Supported   |  Symbology    | List  |
 | :------------- | :------------- | :-----|
