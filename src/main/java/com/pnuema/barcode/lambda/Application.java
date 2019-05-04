@@ -32,11 +32,23 @@ public class Application implements RequestHandler<APIGatewayProxyRequestEvent, 
             switch (event.getHttpMethod().toLowerCase()) {
                 case "get":
                     request = new Request();
-                    request.setData(event.getQueryStringParameters().get("data"));
-                    request.setSymbology(event.getQueryStringParameters().get("symbology"));
-                    request.setWidth(event.getQueryStringParameters().get("width"));
-                    request.setHeight(event.getQueryStringParameters().get("height"));
-                    request.setFormat(event.getQueryStringParameters().get("format"));
+                    if (event.getPathParameters() != null && event.getPathParameters().containsKey("data")) {
+                        request.setData(event.getPathParameters().get("data"));
+                    } else {
+                        request.setData(event.getQueryStringParameters().get("data"));
+                    }
+
+                    if (event.getPathParameters() != null && event.getPathParameters().containsKey("symbology")) {
+                        request.setSymbology(event.getPathParameters().get("symbology"));
+                    } else {
+                        request.setSymbology(event.getQueryStringParameters().get("symbology"));
+                    }
+
+                    if (event.getQueryStringParameters() != null) {
+                        request.setWidth(event.getQueryStringParameters().get("width"));
+                        request.setHeight(event.getQueryStringParameters().get("height"));
+                        request.setFormat(event.getQueryStringParameters().get("format"));
+                    }
                     break;
                 case "post":
                     try {
