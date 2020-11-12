@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class Application implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-    private Map<String, Barcode.TYPE> symbologies = new LinkedHashMap<>();
+    private final Map<String, Barcode.TYPE> symbologies = new LinkedHashMap<>();
 
     public static void main( final String[] args ) {}
 
