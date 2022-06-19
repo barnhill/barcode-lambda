@@ -1,6 +1,7 @@
 package com.pnuema.barcode.lambda;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
@@ -10,6 +11,7 @@ import com.pnuema.barcode.lambda.models.Request;
 import com.pnuema.barcode.lambda.models.Response;
 import com.pnuema.java.barcode.Barcode;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.*;
 
@@ -27,30 +29,45 @@ public class Application implements RequestHandler<APIGatewayProxyRequestEvent, 
      */
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent event, Context context) {
+        LambdaLogger logger = context.getLogger();
         try {
+            logger.log("Event: " + event);
+            logger.log("Request Type: " + event.getHttpMethod());
             Request request;
             switch (event.getHttpMethod().toLowerCase()) {
                 case "get":
+                    logger.log("Request Type: GET");
                     request = new Request();
                     if (event.getPathParameters() != null && event.getPathParameters().containsKey("data")) {
                         request.setData(event.getPathParameters().get("data"));
                     } else {
                         request.setData(event.getQueryStringParameters().get("data"));
                     }
+                    logger.log("Data: " + request.getData());
 
                     if (event.getPathParameters() != null && event.getPathParameters().containsKey("symbology")) {
                         request.setSymbology(event.getPathParameters().get("symbology"));
                     } else {
                         request.setSymbology(event.getQueryStringParameters().get("symbology"));
                     }
+                    logger.log("Symbology: " + request.getSymbology());
 
                     if (event.getQueryStringParameters() != null) {
-                        request.setWidth(event.getQueryStringParameters().get("width"));
-                        request.setHeight(event.getQueryStringParameters().get("height"));
-                        request.setFormat(event.getQueryStringParameters().get("format"));
+                        String width = event.getQueryStringParameters().get("width");
+                        request.setWidth(width);
+                        logger.log("Width: " + request.getWidth());
+
+                        String height = event.getQueryStringParameters().get("height");
+                        request.setHeight(height);
+                        logger.log("Height: " + request.getHeight());
+
+                        String format = event.getQueryStringParameters().get("format");
+                        request.setFormat(format);
+                        logger.log("Format: " + request.getFormat());
                     }
                     break;
                 case "post":
+                    logger.log("Request Type: POST");
                     try {
                         PostRequest postRequest = Json.fromJson(PostRequest.class, event.getIsBase64Encoded() ? new String(Base64.getDecoder().decode(event.getBody())) : event.getBody());
                         request = postRequest.getRequest();
@@ -68,7 +85,13 @@ public class Application implements RequestHandler<APIGatewayProxyRequestEvent, 
             }
 
             Barcode barcode = new Barcode();
-            barcode.encode(convertTypeFromString(request.getSymbology()), request.getData());
+            try {
+                Image image = barcode.encode(convertTypeFromString(request.getSymbology()), request.getData());
+
+                logger.log("Image: " + image.toString());
+            } catch (Exception ex) {
+                logger.log("Encoding Error: " + ex);
+            }
 
             return new APIGatewayProxyResponseEvent().withBody(
                     new Response(barcode.getRawData(),
@@ -81,6 +104,7 @@ public class Application implements RequestHandler<APIGatewayProxyRequestEvent, 
                             .toJson())
                     .withStatusCode(200);
         } catch (Exception ex) {
+            logger.log("API Error: " + ex + ": " + Arrays.toString(ex.getStackTrace()));
             return new APIGatewayProxyResponseEvent().withBody(new Response(Json.getFormattedError(ex)).toJson()).withStatusCode(500);
         }
     }
@@ -88,7 +112,7 @@ public class Application implements RequestHandler<APIGatewayProxyRequestEvent, 
     private APIGatewayProxyResponseEvent inputValidation (Request request) {
         //check required fields and if not present return error message
         if (request.getData() == null || request.getData().isEmpty()) {
-            return new APIGatewayProxyResponseEvent().withBody(new Response("Error (Invalid data): " + request.toString()).toJson()).withStatusCode(500);
+            return new APIGatewayProxyResponseEvent().withBody(new Response("Error (Invalid data): " + request).toJson()).withStatusCode(500);
         }
         Barcode.TYPE type = convertTypeFromString(request.getSymbology());
         if (type == null) {
